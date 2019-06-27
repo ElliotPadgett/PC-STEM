@@ -31,14 +31,8 @@ refs = {};
 for i=1:numspots
     ids{i} = spotMaps(i).id;
     
-    if nargin < 4
-        refs{i} = [mean(mean(spotMaps(i).x1map(refWin_x1))),...
-            mean(mean(spotMaps(i).x2map(refWin_x1)))];
-    else
-        refs{i} = [mean(mean(spotMaps(i).x1map(refWin_x1,refWin_x2))),...
-            mean(mean(spotMaps(i).x2map(refWin_x1,refWin_x2)))];
-    end
-
+    refs{i} = [mean(mean(spotMaps(i).VectorX1(refWin_x1))),...
+        mean(mean(spotMaps(i).VectorX2(refWin_x1)))];
 end
 
 spotReferences = struct('id',ids,'point',refs);
