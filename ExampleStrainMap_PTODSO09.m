@@ -1,16 +1,8 @@
-%This script demonstrates a lattice structure map using EWPC analysis for a
-% PTO thin film on a DSO substrate, showing ferroelectric domains
-% Elliot Padgett -- November, 2018
-%   Updating index convention, October 3, 2018
+%This script demonstrates use of the PC-STEM package for strain mapping
+%using scanning nanobeam electron diffraction.
+%Written by Elliot Padgett in the Muller Group at Cornell University.  
+%Last updated June 26, 2019.
 
-%Function dependencies:
-%   readSTEM4D
-%   plotIM
-%   MakeDisk
-%   mapMask
-%   resizeFig
-%   ewpc
-%   windowPickingHelper
 
 %% Load Data 
 
