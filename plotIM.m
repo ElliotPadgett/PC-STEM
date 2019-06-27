@@ -9,7 +9,7 @@ if ~isvector(varargin{1})
     %if x and y scales are not specified, don't show axis ticks
     set(gca,'XTick',[],'YTick',[]);
 end
-set(gca,'FontSize',22,'FontWeight','Bold');
+set(gca,'FontSize',16,'FontWeight','Bold');
 axis image;
 colormap(gray);
 
