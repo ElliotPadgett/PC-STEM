@@ -248,9 +248,13 @@ for i = 1:length(ewpcPointBoxes)
     p(p<1)=1;
     
     a=subplot(length(ewpcPointBoxes),3,3*i);
-    plotIM(bsat(ewpc(gdata.d4d(:,:,diffPointPos(2),diffPointPos(1)))));
+    PCim = bsat(ewpc(gdata.d4d(:,:,diffPointPos(2),diffPointPos(1))));
+    plotIM(PCim);
     ewpcRoi = [p(1),p(1)+p(3),p(2),p(2)+p(4)];
     axis(ewpcRoi)
+    imax = max(max(PCim(ewpcRoi(1):ewpcRoi(2),ewpcRoi(3):ewpcRoi(4))));
+    imin = min(min(PCim(ewpcRoi(1):ewpcRoi(2),ewpcRoi(3):ewpcRoi(4))));
+    caxis([imin,imax]);
     title(sprintf('EWPC spot %d',i))
     coloridx = mod(i-1,length(colors))+1;
     a.XColor = colors(coloridx,:); a.YColor = colors(coloridx,:); a.LineWidth = 4;
