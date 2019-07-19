@@ -21,7 +21,7 @@ function [ roi, wins ] = windowPickingHelper( data4d , im2d, p_roi, p_wins, inte
 %           [x1min,x1max,x2min,x2max].
 %
 %This function is part of the PC-STEM Package by Elliot Padgett in the 
-%Muller Group at Cornell University.  Last updated June 26, 2019.
+%Muller Group at Cornell University.  Last updated July 18, 2019.
 
 %Set default inputs
 if nargin>2
@@ -37,12 +37,12 @@ end
 %Set up figure
 drawnow
 f=figure();
-resizeFig(f,2,2)
 
 %Set up guidata structure for shared data
 gdata = struct('d4d',data4d);
 gdata.EwpcWindows = [];
 gdata.Im2D = im2d;
+gdata.Transf = @(x) x.^1;
 guidata(f,gdata)
 
 %% Set up full image and ROI selection box
@@ -206,9 +206,10 @@ gdata = guidata(gcf);
 
 diffPointPos = round(pos);
 setPosition(gdata.DiffPoint,diffPointPos);
+t = gdata.Transf;
 
 gdata.CbedIm.CData=log(gdata.d4d(:,:,diffPointPos(2),diffPointPos(1)));
-gdata.EwpcIm.CData = bsat(ewpc(gdata.d4d(:,:,diffPointPos(2),diffPointPos(1))));
+gdata.EwpcIm.CData = bsat(t(ewpc(gdata.d4d(:,:,diffPointPos(2),diffPointPos(1)))));
 
 guidata(gcf,gdata)
 UpdateEWPCWins( pos )
@@ -248,12 +249,15 @@ for i = 1:length(ewpcPointBoxes)
     p(p<1)=1;
     
     a=subplot(length(ewpcPointBoxes),3,3*i);
-    PCim = bsat(ewpc(gdata.d4d(:,:,diffPointPos(2),diffPointPos(1))));
+    t = gdata.Transf;
+    PCim = bsat(t(ewpc(gdata.d4d(:,:,diffPointPos(2),diffPointPos(1)))));
     plotIM(PCim);
     ewpcRoi = [p(1),p(1)+p(3),p(2),p(2)+p(4)];
     axis(ewpcRoi)
-    imax = max(max(PCim(ewpcRoi(1):ewpcRoi(2),ewpcRoi(3):ewpcRoi(4))));
-    imin = min(min(PCim(ewpcRoi(1):ewpcRoi(2),ewpcRoi(3):ewpcRoi(4))));
+%     imax = max(max(PCim(ewpcRoi(1):ewpcRoi(2),ewpcRoi(3):ewpcRoi(4))));
+%     imin = min(min(PCim(ewpcRoi(1):ewpcRoi(2),ewpcRoi(3):ewpcRoi(4))));
+    imax = max(max(PCim(ewpcRoi(3):ewpcRoi(4),ewpcRoi(1):ewpcRoi(2))));
+    imin = min(min(PCim(ewpcRoi(3):ewpcRoi(4),ewpcRoi(1):ewpcRoi(2))));
     caxis([imin,imax]);
     title(sprintf('EWPC spot %d',i))
     coloridx = mod(i-1,length(colors))+1;
@@ -295,9 +299,72 @@ title('log(CBED)')
 
 %Show EWPC at selected point
 gdata.EwpcAx=subplot(2,3,5);
-gdata.EwpcIm=plotIM(bsat(ewpc(gdata.d4d(:,:,diffPointPos(2),diffPointPos(1)))));
+t = gdata.Transf;
+gdata.EwpcIm=plotIM(bsat(t(ewpc(gdata.d4d(:,:,diffPointPos(2),diffPointPos(1))))));
 title({'EWPC: Pick', 'fit windows'})
 
 guidata(gcf,gdata)
 
+MakeUiControls()
+gdata = guidata(gcf);
+guidata(gcf,gdata)
+
+end
+
+
+function [] = MakeUiControls()
+gdata = guidata(gcf);
+
+%contrast controls
+bg = uibuttongroup('Title','EWPC Contrast',...
+                  'Visible','off',...
+                  'Position',[.35 0.01 .3 .1],...
+                  'FontWeight','bold',...
+                  'FontSize',12,...
+                  'BackgroundColor','w',...
+                  'SelectionChangedFcn',@bselection);
+                            
+gdata.s1 = uicontrol(bg,'Style','slider',...
+                  'Position',[40 0 60 20],...
+                  'BackgroundColor','w',...
+                  'Min',0.001,'Max',1,...
+                  'Value',1,...
+                  'Callback',@bselection,...
+                  'HandleVisibility','off');     
+
+uicontrol(bg,'Style','text',...
+                  'String','log',...
+                  'FontSize',12,...
+                  'HorizontalAlignment','right',...
+                  'BackgroundColor','w',...
+                  'Position',[0 0 30 25],...
+                  'HandleVisibility','off');
+uicontrol(bg,'Style','text',...
+                  'String','linear',...
+                  'FontSize',12,...
+                  'HorizontalAlignment','left',...
+                  'BackgroundColor','w',...
+                  'Position',[110 0 40 25],...
+                  'HandleVisibility','off');
+
+bg.Visible = 'on';
+guidata(gcf,gdata)
+end
+
+
+function bselection(source,event)
+gdata = guidata(gcf);
+
+Gamma = gdata.s1.Value;
+gdata.Transf = @(x) x.^Gamma;
+t = gdata.Transf;
+diffPointPos = round(getPosition(gdata.DiffPoint));
+gdata.EwpcIm.CData = bsat(t(ewpc(gdata.d4d(:,:,diffPointPos(2),diffPointPos(1)))));
+
+
+guidata(gcf,gdata)
+
+UpdateEWPCWins(  )
+gdata = guidata(gcf);
+guidata(gcf,gdata)
 end
