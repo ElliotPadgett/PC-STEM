@@ -7,9 +7,13 @@ function [ spotMaps ] = ewpc_mapSpots( data4d,spotList,tol,valid)
 %                   'id' -- a name identifying the spot.
 %                   'spotRangeX1' -- index range around the spot in X1.
 %                   'spotRangeX2' -- index range around the spot in X2.
+%                   Additional Field may be supplied:
+%                   'valid' -- a mask for each spot that identifies the
+%                               subregion in which to perform the fitting
+%                               (for that spot)
 %       tol -- (optional) convergence tolerance. Default is 1e-3.
 %       valid -- (optional) a mask to identify a subregion in which to
-%                perform the fitting procedure
+%                perform the fitting procedure (applies to all spots)
 %   output:
 %       spotMaps -- struct array containing maps of maximum spot index Q1,Q2
 %                 for each spot in spotList. Fields are:
@@ -21,7 +25,7 @@ function [ spotMaps ] = ewpc_mapSpots( data4d,spotList,tol,valid)
 %                 'spotlength' -- map of the spot vector length.
 %                 'spotangle' -- map of the spot vector angle in degrees.
 %
-%This function is part of the PC-STEM Package by Elliot Padgett in the 
+%This function is part of the PC-STEM Package by Elliot Padgett in the
 %Muller Group at Cornell University.  Last updated June 26, 2019.
 
 %initialize data info
@@ -31,10 +35,12 @@ minval=min(data4d(:));
 
 if nargin<3
     tol=1e-3;
-    valid = ones(N_x1,N_x2);
-elseif nargin<4
+end
+if nargin<4
     valid = ones(N_x1,N_x2);
 end
+flag_spotDepValid = isfield(spotList,'valid');
+
 
 %Set up Q indexing
 q1range = 1:N_k1; q2range = 1:N_k2;
@@ -45,6 +51,12 @@ spotMaps = struct('id',{spotList.id},'Q1map',zeros(N_x1,N_x2),'Q2map',zeros(N_x1
 
 fprintf('Starting CBEDFFT spot-tracking map.\n'); tic
 totalspots = length(spotMaps)*sum(valid(:)); spotsfit = 0; % For tracking progress
+if flag_spotDepValid
+    totalspots = 0;
+    for s=1:length(spotList)
+        totalspots = totalspots+sum(spotList(s).valid(:).*valid(:));
+    end
+end
 %iterate through spatial positions
 for j=1:N_x1
     for k=1:N_x2
@@ -55,30 +67,39 @@ for j=1:N_x1
             EWPC = ewpc(CBED);
             %define continuous Fourier transform
             PeakFun = @(x) -abs(cft2(win.*log(CBED-minval+0.1),x(1),x(2),1)); %x is [q1,q2]
-           
+            
             %iterate through spots of interest
             for s = 1:length(spotList)
-                %Get spot locations from input struct
-                spot_ROI_q1 = spotList(s).spotRangeQ1;
-                spot_ROI_q2 = spotList(s).spotRangeQ2;
-                spotNeighborhood = EWPC(spot_ROI_q1,spot_ROI_q2);
                 
-                %Find rough maximum of peak 
-                [~,maxidx] = max(spotNeighborhood(:));
-                Q1_roi = Q1(spot_ROI_q1,spot_ROI_q2);
-                Q2_roi = Q2(spot_ROI_q1,spot_ROI_q2);
-                Q1max = Q1_roi(maxidx); Q2max = Q2_roi(maxidx);
-                
-                %Search for spot peak in continuous Fourier transform
-                constrainedPeakFun = @(x) ConstrainedFun(x,PeakFun,...
-                    [spot_ROI_q1(1),spot_ROI_q1(end)],[spot_ROI_q2(1),spot_ROI_q2(end)]);
-                [peakQ] = fminsearch(constrainedPeakFun,[Q1max,Q2max],optimset('TolX',tol,'TolFun',tol));
-                
-                %Assign in maps
-                spotMaps(s).Q1map(j,k) = peakQ(1);
-                spotMaps(s).Q2map(j,k) = peakQ(2);
-                
-                spotsfit = spotsfit+1;
+                if flag_spotDepValid & ~spotList(s).valid(j,k)
+                    spotMaps(s).Q1map(j,k) = nan;
+                    spotMaps(s).Q2map(j,k) = nan;
+                    continue
+                else
+                                    
+                    %Get spot locations from input struct
+                    spot_ROI_q1 = spotList(s).spotRangeQ1;
+                    spot_ROI_q2 = spotList(s).spotRangeQ2;
+                    spotNeighborhood = EWPC(spot_ROI_q1,spot_ROI_q2);
+                    
+                    %Find rough maximum of peak
+                    [~,maxidx] = max(spotNeighborhood(:));
+                    Q1_roi = Q1(spot_ROI_q1,spot_ROI_q2);
+                    Q2_roi = Q2(spot_ROI_q1,spot_ROI_q2);
+                    Q1max = Q1_roi(maxidx); Q2max = Q2_roi(maxidx);
+                    
+                    %Search for spot peak in continuous Fourier transform
+                    constrainedPeakFun = @(x) ConstrainedFun(x,PeakFun,...
+                        [spot_ROI_q1(1),spot_ROI_q1(end)],[spot_ROI_q2(1),spot_ROI_q2(end)]);
+                    [peakQ] = fminsearch(constrainedPeakFun,[Q1max,Q2max],optimset('TolX',tol,'TolFun',tol));
+                    
+                    %Assign in maps
+                    spotMaps(s).Q1map(j,k) = peakQ(1);
+                    spotMaps(s).Q2map(j,k) = peakQ(2);
+                    
+                    spotsfit = spotsfit+1;
+                    
+                end
             end
         else
             for s = 1:length(spotList)
@@ -91,7 +112,7 @@ for j=1:N_x1
         100*spotsfit/totalspots,round(toc/spotsfit*(totalspots-spotsfit)));
 end
 
-t=toc; 
+t=toc;
 fprintf('\nDone. Total time: %.1f s. Time per peak fit: %.3f s.\n',t,t/totalspots)
 
 % Add vector-form maps to spotMaps struct
@@ -104,12 +125,12 @@ function y = ConstrainedFun(x,fun,win1,win2)
 %adds constraint to objective function fun, which is assumed to be always
 %negative, by adding a positive "cone of shame" outside the specified
 %window
-    if x(1) < win1(1) || x(1) > win1(2) || x(2) < win2(1) || x(2) > win2(2)
-        cent = [mean(win1),mean(win2)];
-        y = norm(x-cent);
-    else
-        y = fun(x);
-    end
+if x(1) < win1(1) || x(1) > win1(2) || x(2) < win2(1) || x(2) > win2(2)
+    cent = [mean(win1),mean(win2)];
+    y = norm(x-cent);
+else
+    y = fun(x);
+end
 end
 
 %%
@@ -126,7 +147,7 @@ end
 
 %%
 function [ spotMaps_updated ] = calculateSpotMapVectors( spotMaps)
-%calculateSpotMapVectors Calculates vector components, length, and angle 
+%calculateSpotMapVectors Calculates vector components, length, and angle
 %   assuming detector has 124 pixels, i.e. zero=(63,63). These are added to
 %   the spotMaps struct
 
