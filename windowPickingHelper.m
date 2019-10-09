@@ -24,6 +24,9 @@ function [ roi, wins ] = windowPickingHelper( data4d , im2d, p_roi, p_wins, inte
 %Muller Group at Cornell University.  Last updated July 18, 2019.
 
 %Set default inputs
+if nargin<2
+    im2d = squeeze(mean(mean(data4d)));
+end
 if nargin>2
     preset = 1;
     p_roi = [p_roi(3:4), p_roi(1:2)] ; %follow index convention
@@ -35,8 +38,9 @@ if nargin < 5
 end
 
 %Set up figure
+scsz = get(0,'ScreenSize');
 drawnow
-f=figure();
+f=figure('Position',[100,100,scsz(3)-200,scsz(4)-200]);
 
 %Set up guidata structure for shared data
 gdata = struct('d4d',data4d);
@@ -134,7 +138,6 @@ if interactive % non-interactive skips to end
     gdata = guidata(gcf);
     roi = gdata.adfRoi;
 
-    
     fprintf('When finished, hit any key to return.\n')
     
     waitforbuttonpress;
@@ -152,9 +155,19 @@ for i=1:length(gdata.EwpcWindows)
     p = round(getPosition(gdata.EwpcWindows(i)));
     p(p<1)=1;
     wins(i,:) = [p(2),p(2)+p(4),p(1),p(1)+p(3)]; %follow index convention
+    
 end
 
 pause(0.01)
+subplot(2,3,5)
+title({'EWPC -'; 'Returned Fit Windows!'})
+
+%    gdata.EwpcIm.ButtonDownFcn = @deal; % this works to prevent new boxes,
+                                        % but every time you click on subplot,
+                                        % it throws an error, so kind of annoying
+
+subplot(2,3,1)
+title({'2D image:';'Selected ROI'})
 drawnow
 pause(0.01)
 fprintf('Done.\n')
@@ -368,3 +381,4 @@ UpdateEWPCWins(  )
 gdata = guidata(gcf);
 guidata(gcf,gdata)
 end
+
