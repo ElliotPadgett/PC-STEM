@@ -116,7 +116,7 @@ t=toc;
 fprintf('\nDone. Total time: %.1f s. Time per peak fit: %.3f s.\n',t,t/totalspots)
 
 % Add vector-form maps to spotMaps struct
-spotMaps = calculateSpotMapVectors( spotMaps);
+spotMaps = calculateSpotMapVectors( spotMaps, N_k1, N_k2);
 
 end
 
@@ -146,18 +146,22 @@ w=maskr.*maskc;
 end
 
 %%
-function [ spotMaps_updated ] = calculateSpotMapVectors( spotMaps)
+function [ spotMaps_updated ] = calculateSpotMapVectors( spotMaps, N_k1, N_k2)
 %calculateSpotMapVectors Calculates vector components, length, and angle
-%   assuming detector has 124 pixels, i.e. zero=(63,63). These are added to
-%   the spotMaps struct
-
+%   with detector with N_k1,  N_k2 pixels, i.e. zero=(N_k1,N_k2)/2+1. 
+%   These are added to the spotMaps struct
+center_1 = N_k1/2+1;
+center_2 = N_k2/2+1;
 numSpots = length(spotMaps);
 spotMaps_updated=spotMaps;
 for i=1:numSpots
     x1map=spotMaps(i).Q1map;
-    x1map=x1map-63; x1map(x1map>62) = x1map(x1map>62)- 124;
+    x1map=x1map-center_1; 
+    x1map(x1map>(center_1-1)) = x1map(x1map>(center_1-1))- N_k1;
+    
     x2map=spotMaps(i).Q2map;
-    x2map=x2map-63; x2map(x2map>62) = x2map(x2map>62)- 124;
+    x2map=x2map-center_2; 
+    x2map(x2map>(center_2-1)) = x2map(x2map>(center_2-1))- N_k2;
     
     spotlength=sqrt(x1map.^2+x2map.^2);
     spotangle=atan2d(x1map,x2map);
