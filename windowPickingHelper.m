@@ -38,9 +38,9 @@ if nargin < 5
 end
 
 %Set up figure
-scsz = get(0,'ScreenSize');
+%scsz = get(0,'ScreenSize');
 drawnow
-f=figure('Position',[100,100,scsz(3)-200,scsz(4)-200]);
+f=figure;%('Position',[100,100,scsz(3)-200,scsz(4)-200]);
 
 %Set up guidata structure for shared data
 gdata = struct('d4d',data4d);
