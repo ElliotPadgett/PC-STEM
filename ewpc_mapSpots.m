@@ -32,12 +32,8 @@ minval=min(data4d(:));
 if nargin<3
     tol=1e-3;
     valid = ones(N_x1,N_x2);
-    penaltyFactor = 1;
 elseif nargin<4
     valid = ones(N_x1,N_x2);
-    penaltyFactor = 1;
-elseif nargin<5
-    penaltyFactor = 1;
 end
 
 %Set up Q indexing
