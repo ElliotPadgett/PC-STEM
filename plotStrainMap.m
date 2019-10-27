@@ -19,15 +19,23 @@ function [] = plotStrainMap(StrainComponents)
 %Muller Group at Cornell University.  Last updated June 26, 2019.
 
 figure,
-subplot(2,2,1),plotIM(StrainComponents.Eps11),colorbar,title('\epsilon_1_1')
-subplot(2,2,2),plotIM(StrainComponents.Eps22),colorbar,title('\epsilon_2_2')
-subplot(2,2,3),plotIM(StrainComponents.Eps12),colorbar,title('\epsilon_1_2')
-subplot(2,2,4),plotIM(StrainComponents.Theta),colorbar,title('\theta')
+subplot(2,2,1),plotIM(StrainComponents.Eps11,'AlphaData',~isnan(StrainComponents.Eps11))
+    colorbar,title('\epsilon_1_1')
+subplot(2,2,2),plotIM(StrainComponents.Eps22,'AlphaData',~isnan(StrainComponents.Eps22))
+    colorbar,title('\epsilon_2_2')
+subplot(2,2,3),plotIM(StrainComponents.Eps12,'AlphaData',~isnan(StrainComponents.Eps12))
+    colorbar,title('\epsilon_1_2')
+subplot(2,2,4),plotIM(StrainComponents.Theta,'AlphaData',~isnan(StrainComponents.Theta))
+    colorbar,title('\theta')
+colormap parula
 
 figure,
-subplot(1,3,1),plotIM(StrainComponents.majAx),colorbar,title('Major axis')
-subplot(1,3,2),plotIM(StrainComponents.minAx),colorbar,title('Minor axis')
-subplot(1,3,3),plotIM(StrainComponents.strainAngle),colorbar,title('Axis angle')
+subplot(1,3,1),plotIM(StrainComponents.majAx,'AlphaData',~isnan(StrainComponents.majAx))
+    colorbar,title('Major axis')
+subplot(1,3,2),plotIM(StrainComponents.minAx,'AlphaData',~isnan(StrainComponents.minAx))
+    colorbar,title('Minor axis')
+subplot(1,3,3),plotIM(StrainComponents.strainAngle,'AlphaData',~isnan(StrainComponents.strainAngle))
+    colorbar,title('Axis angle')
 
+colormap parula
 end
-
