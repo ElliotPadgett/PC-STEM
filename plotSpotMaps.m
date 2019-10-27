@@ -18,21 +18,21 @@ figure
 numSpots = length(spotMaps);
 for i=1:numSpots
     subplot(numSpots,4,i*4-3)
-    plotIM(spotMaps(i).VectorX1);
-    title(sprintf('spot %d: index1,',i)),colorbar
+    plotIM(spotMaps(i).VectorX1,'AlphaData',~isnan(spotMaps(i).VectorX1));
+    title(sprintf('spot %d: X1,',i)),colorbar
     
     subplot(numSpots,4,i*4-2)
-    plotIM(spotMaps(i).VectorX2);
-    title(sprintf('index2,')),colorbar
+    plotIM(spotMaps(i).VectorX2,'AlphaData',~isnan(spotMaps(i).VectorX2));
+    title(sprintf('X2,')),colorbar
     
     subplot(numSpots,4,i*4-1)
-    plotIM(spotMaps(i).VectorLength);
+    plotIM(spotMaps(i).VectorLength,'AlphaData',~isnan(spotMaps(i).VectorLength));
     title(sprintf('length,')),colorbar
     
     subplot(numSpots,4,i*4)
-    plotIM(spotMaps(i).VectorAngle);
+    plotIM(spotMaps(i).VectorAngle,'AlphaData',~isnan(spotMaps(i).VectorAngle));
     title(sprintf('angle (^o)')),colorbar
 end
-
+colormap parula
 end
 
