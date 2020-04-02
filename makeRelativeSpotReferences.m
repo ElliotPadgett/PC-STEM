@@ -31,8 +31,9 @@ refs = {};
 for i=1:numspots
     ids{i} = spotMaps(i).id;
     
-    refs{i} = [mean(mean(spotMaps(i).VectorX1(refWin_x1))),...
-        mean(mean(spotMaps(i).VectorX2(refWin_x1)))];
+    vx1 = spotMaps(i).VectorX1(refWin_x1,refWin_x2);
+    vx2 = spotMaps(i).VectorX2(refWin_x1,refWin_x2);
+    refs{i} = [nanmean(nanmean(vx1(:))), nanmean(nanmean(vx2(:)))];
 end
 
 spotReferences = struct('id',ids,'point',refs);
