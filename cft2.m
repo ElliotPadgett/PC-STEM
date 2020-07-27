@@ -14,22 +14,22 @@ function [ F ] = cft2( f, q1, q2 ,zeroCentered)
 %            number, rather than an array.
 %
 %This function is part of the PC-STEM Package by Elliot Padgett in the 
-%Muller Group at Cornell University.  Last updated June 26, 2019.
+%Muller Group at Cornell University.  Last updated by Megan Holtz for speed July 27, 2020.
 
 if nargin<4
     zeroCentered = 0;
 end
 
 [m,n]=size(f);
-[k,j] = meshgrid(0:n-1,0:m-1);
+jgr = 0:m-1;
+kgr = 0:n-1;
 
 if zeroCentered
     q1=q1+m/2;
     q2=q2+n/2;
 end
 
-F = sum(sum(f.*exp(-2*pi*1i*(j*(q1-1)/m + k*(q2-1)/n))));
-%F = sum(f(:).*exp(-2*pi*1i*(j(:)*(p-1)/m + k(:)*(q-1)/n)));
+F = sum(sum( f.* (exp(-2*pi*1i*jgr'*(q1-1)/m)*exp(-2*pi*1i*kgr*(q2-1)/n)) ));
 
 end
 
